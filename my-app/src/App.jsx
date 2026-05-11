@@ -41,6 +41,31 @@ const MOCK_JOBS = [
       { id: 1, name: "AWS Certified Developer – Associate", provider: "Amazon Web Services", cost: "£150", duration: "3 months prep", priority: "High", description: "Validates ability to develop and maintain applications on AWS. Highly sought after by UK tech employers." },
       { id: 2, name: "BCS Professional Certificate in IT", provider: "BCS, The Chartered Institute for IT", cost: "£200", duration: "6 months", priority: "Medium", description: "Industry-recognised UK qualification demonstrating professional IT competency and ethical practice." },
     ],
+    roadmap: [
+      {
+        id: 'step1',
+        milestone: { type: 'qualifications', id: 1, title: 'AWS Certified Developer', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'events', id: 2, title: 'AWS Summit', icon: '📅', color: COLORS.accent },
+          { type: 'projects', id: 3, title: 'CLI Tool', icon: '🔨', color: COLORS.warning },
+        ]
+      },
+      {
+        id: 'step2',
+        milestone: { type: 'projects', id: 1, title: 'Full-Stack Web App', icon: '🔨', color: COLORS.warning },
+        branches: [
+          { type: 'events', id: 1, title: 'Hackathon', icon: '📅', color: COLORS.accent },
+          { type: 'events', id: 3, title: 'Workshop', icon: '📅', color: COLORS.accent },
+        ]
+      },
+      {
+        id: 'step3',
+        milestone: { type: 'qualifications', id: 2, title: 'BCS IT Certificate', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'projects', id: 2, title: 'Open Source', icon: '🔨', color: COLORS.warning },
+        ]
+      },
+    ],
     gaps: ["System design knowledge", "Cloud infrastructure experience", "CI/CD pipeline familiarity"],
     strengths: ["Programming fundamentals", "Problem solving", "Version control"],
   },
@@ -64,6 +89,29 @@ const MOCK_JOBS = [
       { id: 1, name: "Google UX Design Certificate", provider: "Google / Coursera", cost: "£35/month", duration: "6 months", priority: "High", description: "Comprehensive UX design programme. Covers design thinking, Figma, and building a professional portfolio." },
       { id: 2, name: "UXQB Certified Professional for Usability and UX", provider: "UXQB", cost: "£300", duration: "2 months prep", priority: "Medium", description: "International usability certification recognised across Europe. Demonstrates foundational UX expertise." },
     ],
+    roadmap: [
+      {
+        id: 'step1',
+        milestone: { type: 'qualifications', id: 1, title: 'Google UX Cert', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'events', id: 1, title: 'UX London', icon: '📅', color: COLORS.accent },
+        ]
+      },
+      {
+        id: 'step2',
+        milestone: { type: 'projects', id: 1, title: 'App Redesign', icon: '🔨', color: COLORS.warning },
+        branches: [
+          { type: 'events', id: 2, title: 'Figma Meetup', icon: '📅', color: COLORS.accent },
+        ]
+      },
+      {
+        id: 'step3',
+        milestone: { type: 'qualifications', id: 2, title: 'UXQB Cert', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'projects', id: 2, title: 'Design System', icon: '🔨', color: COLORS.warning },
+        ]
+      },
+    ],
     gaps: ["Figma proficiency", "User research methods", "Accessibility standards"],
     strengths: ["Visual creativity", "Attention to detail", "Stakeholder communication"],
   },
@@ -85,6 +133,27 @@ const MOCK_JOBS = [
     qualifications: [
       { id: 1, name: "Microsoft Power BI Data Analyst Associate", provider: "Microsoft", cost: "£165", duration: "2 months prep", priority: "High", description: "Industry-standard certification for business intelligence. Directly relevant to most UK data analyst job postings." },
       { id: 2, name: "Google Data Analytics Certificate", provider: "Google / Coursera", cost: "£35/month", duration: "6 months", priority: "Medium", description: "Covers the full data analysis lifecycle using R, SQL, and Tableau. Good entry-level credential." },
+    ],
+    roadmap: [
+      {
+        id: 'step1',
+        milestone: { type: 'qualifications', id: 2, title: 'Google Data Cert', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'projects', id: 1, title: 'Sales Dashboard', icon: '🔨', color: COLORS.warning },
+        ]
+      },
+      {
+        id: 'step2',
+        milestone: { type: 'qualifications', id: 1, title: 'Microsoft BI Cert', icon: '🎓', color: '#a855f7' },
+        branches: [
+          { type: 'events', id: 1, title: 'Data Festival', icon: '📅', color: COLORS.accent },
+        ]
+      },
+      {
+        id: 'step3',
+        milestone: { type: 'projects', id: 2, title: 'Predictive Model', icon: '🔨', color: COLORS.warning },
+        branches: []
+      },
     ],
     gaps: ["SQL proficiency", "Statistical analysis", "Data visualisation tools", "Python/R skills"],
     strengths: ["Numeracy", "Excel basics", "Attention to detail"],
@@ -237,9 +306,190 @@ function DashboardPage({ jobs, onSelectJob, setPage }) {
   );
 }
 
+function RoadmapStep({ job, step, index }) {
+  const [hovered, setHovered] = useState(false);
+  const isLeft = index % 2 === 0;
+  
+  const milestone = step.milestone;
+  const milestoneItem = job[milestone.type].find(item => item.id === milestone.id);
+  const branchItems = step.branches.map(branch => ({
+    ...branch,
+    item: job[branch.type].find(item => item.id === branch.id)
+  }));
+
+  return (
+    <div style={{ position: 'relative', height: 260, width: '100%', zIndex: hovered ? 50 : job.roadmap.length - index }}>
+      
+      {/* Curved Road SVG Segment */}
+      {/* We use vectorEffect="non-scaling-stroke" so the stroke width stays constant even as the SVG stretches */}
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+        {/* Asphalt Base */}
+        <path d={isLeft ? "M50,0 C10,25 10,75 50,100" : "M50,0 C90,25 90,75 50,100"} fill="none" stroke="#1e293b" strokeWidth="28" vectorEffect="non-scaling-stroke" />
+        {/* Dashed Center Line */}
+        <path d={isLeft ? "M50,0 C10,25 10,75 50,100" : "M50,0 C90,25 90,75 50,100"} fill="none" stroke="#cbd5e1" strokeWidth="3" strokeDasharray="12,12" vectorEffect="non-scaling-stroke" />
+      </svg>
+
+      {/* Anchor Dot on the Road */}
+      <div style={{
+        position: 'absolute', top: '50%', left: isLeft ? '20%' : '80%', transform: 'translate(-50%, -50%)',
+        width: 12, height: 12, borderRadius: '50%', background: '#fff', border: `3px solid ${milestone.color}`, zIndex: 1
+      }} />
+
+      {/* Interactive Node Wrapper */}
+      {/* Positioned exactly at the peak of the curve (20% or 80%) */}
+      <div 
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: isLeft ? '20%' : '80%',
+          zIndex: 10,
+        }}
+      >
+        {/* Invisible Bridge to prevent hover loss between pin and card */}
+        <div style={{
+           position: 'absolute',
+           top: -100,
+           left: isLeft ? -24 : -360,
+           width: 380,
+           height: 200,
+           zIndex: 0
+        }} />
+
+        {/* Map Pin */}
+        <div style={{
+          position: 'absolute',
+          left: 0, top: -48, // Aligns the rotated tip exactly to (0,0) of this wrapper
+          width: 48, height: 48,
+          background: milestone.color,
+          borderRadius: '50% 50% 50% 0',
+          transform: `rotate(-45deg) ${hovered ? 'scale(1.15)' : 'scale(1)'}`,
+          transformOrigin: 'bottom left',
+          boxShadow: hovered ? '0 8px 16px rgba(0,0,0,0.2)' : '0 4px 10px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '3px solid #fff',
+          zIndex: 2
+        }}>
+          <div style={{ transform: 'rotate(45deg)', color: '#fff', fontSize: 20 }}>{milestone.icon}</div>
+        </div>
+
+        {/* Always-visible Mini Label (hides on hover) */}
+        <div style={{
+          position: 'absolute',
+          top: -38,
+          left: isLeft ? 36 : -36,
+          transform: isLeft ? 'none' : 'translateX(-100%)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '6px 14px',
+          borderRadius: 20,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          fontWeight: 700, fontSize: 14, color: COLORS.text, whiteSpace: 'nowrap',
+          opacity: hovered ? 0 : 1,
+          transition: 'opacity 0.2s',
+          pointerEvents: 'none',
+          border: `1px solid ${COLORS.border}`,
+          zIndex: 1
+        }}>
+          {milestone.title}
+        </div>
+
+        {/* Detailed Hover Card */}
+        <div style={{
+          position: 'absolute',
+          top: -80, // Centers roughly with the pin
+          left: isLeft ? 48 : -368,
+          width: 320,
+          opacity: hovered ? 1 : 0,
+          visibility: hovered ? 'visible' : 'hidden',
+          transform: hovered ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.95)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          pointerEvents: hovered ? 'auto' : 'none',
+          zIndex: 10
+        }}>
+          <Card style={{ padding: '20px', margin: 0, boxShadow: '0 20px 40px rgba(0,0,0,0.15)', cursor: 'default' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: milestone.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {milestone.type.slice(0, -1)}
+              </span>
+              {milestone.type === 'qualifications' && <PriorityBadge priority={milestoneItem.priority} />}
+            </div>
+            
+            <div style={{ fontWeight: 800, fontSize: 18, color: COLORS.text, marginBottom: 6, lineHeight: 1.2 }}>
+              {milestone.title}
+            </div>
+            
+            <p style={{ color: COLORS.textMuted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.5 }}>
+              {milestoneItem.description}
+            </p>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: COLORS.textLight, marginBottom: branchItems.length ? 16 : 0 }}>
+              <span style={{ fontWeight: 600 }}>{milestone.type === 'qualifications' ? milestoneItem.provider : milestoneItem.duration}</span>
+              <Badge type="info">{milestone.type === 'qualifications' ? milestoneItem.duration : `Impact: ${milestoneItem.impact}%`}</Badge>
+            </div>
+
+            {/* Side Quests (Branches) appended inside the hover card */}
+            {branchItems.length > 0 && (
+              <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textLight, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>
+                  Related Side Quests
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {branchItems.map((b, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: COLORS.surfaceAlt, padding: '10px 14px', borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: b.color + '20', color: b.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                        {b.icon}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, lineHeight: 1.2 }}>{b.title}</div>
+                        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{b.item.location || b.item.difficulty}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoadmapView({ job }) {
+  if (!job.roadmap) return <div>No roadmap defined for this job.</div>;
+
+  return (
+    <div style={{ position: 'relative', maxWidth: 800, margin: '0 auto', padding: '40px 0 80px', width: '100%', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Wrapper ensures everything is perfectly anchored to the SVG layout */}
+      <div style={{ position: 'relative', width: '100%' }}>
+        
+        {/* Start Cap (Top Origin) */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10, width: 24, height: 24, borderRadius: '50%', background: '#1e293b', border: '4px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+        
+        {job.roadmap.map((step, index) => (
+          <RoadmapStep key={step.id} job={job} step={step} index={index} />
+        ))}
+
+        {/* End Cap (Bottom Destination) */}
+        <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translate(-50%, 50%)', zIndex: 10, width: 64, height: 64, borderRadius: '50%', background: COLORS.success, border: '5px solid #fff', boxShadow: '0 6px 20px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#fff' }}>
+          ⭐
+        </div>
+        <div style={{ position: 'absolute', bottom: -54, left: '50%', transform: 'translateX(-50%)', fontSize: 18, fontWeight: 800, color: COLORS.success, whiteSpace: 'nowrap' }}>
+          100% Match Reached
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function JobDetailPage({ job, onBack }) {
-  const [activeTab, setActiveTab] = useState("events");
+  const [activeTab, setActiveTab] = useState("roadmap");
   const tabs = [
+    { id: "roadmap", label: "🗺️ Path Roadmap", count: job.roadmap?.length || 0 },
     { id: "events", label: "📅 Events", count: job.events.length },
     { id: "projects", label: "🔨 Projects", count: job.projects.length },
     { id: "qualifications", label: "🎓 Qualifications", count: job.qualifications.length },
@@ -275,14 +525,17 @@ function JobDetailPage({ job, onBack }) {
           </div>
         </Card>
       </div>
-      <div style={{ display: "flex", gap: 0, borderBottom: `2px solid ${COLORS.border}`, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: `2px solid ${COLORS.border}`, marginBottom: 24, overflowX: "auto" }}>
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ background: "none", border: "none", borderBottom: activeTab === tab.id ? `2px solid ${job.color}` : "2px solid transparent", padding: "12px 24px", cursor: "pointer", fontSize: 14, fontWeight: activeTab === tab.id ? 700 : 500, color: activeTab === tab.id ? job.color : COLORS.textMuted, marginBottom: -2, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ background: "none", border: "none", borderBottom: activeTab === tab.id ? `2px solid ${job.color}` : "2px solid transparent", padding: "12px 24px", cursor: "pointer", fontSize: 14, fontWeight: activeTab === tab.id ? 700 : 500, color: activeTab === tab.id ? job.color : COLORS.textMuted, marginBottom: -2, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
             {tab.label}
             <span style={{ background: activeTab === tab.id ? job.color + "20" : COLORS.surfaceAlt, color: activeTab === tab.id ? job.color : COLORS.textMuted, borderRadius: 99, padding: "1px 7px", fontSize: 11, fontWeight: 600 }}>{tab.count}</span>
           </button>
         ))}
       </div>
+      
+      {activeTab === "roadmap" && <RoadmapView job={job} />}
+
       {activeTab === "events" && (
         <div style={{ display: "grid", gap: 16 }}>
           {job.events.map(ev => (
@@ -581,7 +834,7 @@ export default function App() {
   const handleAddJob = (form) => {
     const icons = ["🏢", "🖥️", "📱", "🔬", "💡", "📝"];
     const colors = ["#4f8ef7", "#a855f7", "#14b8a6", "#f59e0b", "#ef4444", "#22c55e"];
-    const newJob = { id: jobs.length + 1, title: form.title, company: form.company, location: form.location || "UK", compatibility: Math.floor(Math.random() * 40) + 30, color: colors[jobs.length % colors.length], icon: icons[jobs.length % icons.length], events: [], projects: [], qualifications: [], gaps: ["Analysing..."], strengths: ["Analysing..."] };
+    const newJob = { id: jobs.length + 1, title: form.title, company: form.company, location: form.location || "UK", compatibility: Math.floor(Math.random() * 40) + 30, color: colors[jobs.length % colors.length], icon: icons[jobs.length % icons.length], events: [], projects: [], qualifications: [], gaps: ["Analysing..."], strengths: ["Analysing..."], roadmap: [] };
     setJobs([...jobs, newJob]);
   };
 
