@@ -31,18 +31,18 @@ Each pillar receives a score, status, explanation, evidence found, blocking gap,
 
 ## Use Case Diagram
 
-The diagram below shows how Career Seekers and Career Advisors interact with Opportunity Decoder. It highlights the core user actions, the shared AI-driven system processes, and the advisor's role in reviewing and verifying the generated roadmap.
+The diagram below presents a simplified SysML-style use case view of Opportunity Decoder. It shows the two primary actors, the main system use cases, and the advisor's role in reviewing and verifying the AI-generated roadmap.
 
 ```mermaid
 flowchart LR
 
-    seeker[Career Seeker<br/>Student / Graduate / Career Changer]
-    advisor[Career Advisor<br/>Mentor / Careers Coach]
+    seeker[Career Seeker]
+    advisor[Career Advisor]
 
     subgraph system[Opportunity Decoder]
+        direction TB
 
-        UC1([Enter career goal])
-        UC2([Paste job description])
+        UC1([Enter career goal<br/>Paste job description])
         UC3([Upload CV and experiences])
         UC4([Generate readiness analysis])
         UC5([View 8-pillar dashboard])
@@ -66,30 +66,30 @@ flowchart LR
 
     end
 
-    seeker --> UC1
-    seeker --> UC2
-    seeker --> UC3
-    seeker --> UC4
-    seeker --> UC5
-    seeker --> UC6
-    seeker --> UC7
-    seeker --> UC8
-    seeker --> UC9
+    seeker --- UC1
+    seeker --- UC3
+    seeker --- UC4
+    seeker --- UC5
+    seeker --- UC6
+    seeker --- UC7
+    seeker --- UC8
+    seeker --- UC9
 
-    advisor --> UC10
-    advisor --> UC11
-    advisor --> UC12
-    advisor --> UC13
-    advisor --> UC14
-    advisor --> UC15
+    advisor --- UC10
+    advisor --- UC11
+    advisor --- UC12
+    advisor --- UC13
+    advisor --- UC14
+    advisor --- UC15
 
-    UC4 --> UC16
-    UC4 --> UC17
-    UC4 --> UC18
-    UC4 --> UC19
-    UC4 --> UC20
+    UC4 -.-> UC16
+    UC4 -.-> UC17
+    UC4 -.-> UC18
+    UC4 -.-> UC19
+    UC4 -.-> UC20
 
-    UC14 --> UC7
+    UC12 -.-> UC7
+    UC14 -.-> UC7
 ```
 
 ## Azure OpenAI integration
