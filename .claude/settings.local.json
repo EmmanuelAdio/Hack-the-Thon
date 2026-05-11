@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(cat \"/c/Users/Emman/AppData/Local/Temp/claude/c--Users-Emman-OneDrive-Documents-GitHub-Hack-the-Thon-Nathan/f51c4324-2c9c-4ee3-be03-f7cbad091903/tasks/btuceq1k6.output\" 2>&1 | tail -60)",
+      "Read(//c/Users/Emman/AppData/Local/Temp/claude/c--Users-Emman-OneDrive-Documents-GitHub-Hack-the-Thon-Nathan/f51c4324-2c9c-4ee3-be03-f7cbad091903/tasks/**)",
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match \"node|next\" } | Select-Object Id, ProcessName, CPU, StartTime | Format-Table)",
+      "PowerShell(Get-NetTCPConnection -State Listen -LocalPort 3000,3001,3002,3003 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess, @{n='ProcessName';e={\\(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue\\).ProcessName}})",
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -eq \"node\" -and $_.StartTime -gt \\(Get-Date\\).AddMinutes\\(-15\\) } | Select-Object Id, StartTime, CPU | Format-Table)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\" | Where-Object { $_.CommandLine -match \"next|npm run dev|npx-cli\" } | ForEach-Object { Write-Host \"Killing PID $\\($_.ProcessId\\): $\\($_.CommandLine.Substring\\(0, [Math]::Min\\(80, $_.CommandLine.Length\\)\\)\\)\"; Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue })",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\" | Where-Object { $_.CommandLine -match \"next|npm run dev|npx-cli\" } | Select-Object ProcessId, @{n='Cmd';e={$_.CommandLine.Substring\\(0, [Math]::Min\\(60, $_.CommandLine.Length\\)\\)}} | Format-Table -AutoSize)"
+    ]
+  }
+}
