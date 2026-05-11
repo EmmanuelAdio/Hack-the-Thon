@@ -29,6 +29,78 @@ This is not just a CV writer or job matcher. The core idea is opportunity access
 
 Each pillar receives a score, status, explanation, evidence found, blocking gap, and next action.
 
+## Use Case Diagram
+
+The diagram below gives a compact SysML-style overview of how the main users interact with Opportunity Decoder. It groups the core student journey, advisor actions, and shared AI processes so the system boundary stays readable and uses space more efficiently in GitHub Markdown.
+
+```mermaid
+flowchart LR
+
+    seeker[Career Seeker]
+    
+    advisor[Career Advisor]
+
+    subgraph system[Opportunity Decoder]
+        direction LR
+
+        subgraph seekerCases[Career Seeker Use Cases]
+            direction TB
+            UC1([Enter career goal<br/>Paste job description])
+            UC2([Upload CV and experiences])
+            UC3([Generate readiness analysis])
+            UC4([View 8-pillar dashboard])
+            UC5([Review evidence map])
+            UC6([Follow interactive roadmap])
+            UC7([View application readiness])
+            UC8([Export or share roadmap])
+        end
+
+        subgraph sharedCases[Shared AI Processes]
+            direction TB
+            UC9([Generate readiness score])
+            UC10([Identify skill and evidence gaps])
+            UC11([Identify hidden evidence])
+            UC12([Generate roadmap])
+            UC13([Generate CV and interview suggestions])
+        end
+
+        subgraph advisorCases[Career Advisor Use Cases]
+            direction TB
+            UC14([Review student profile])
+            UC15([Review AI-generated analysis])
+            UC16([Verify roadmap recommendations])
+            UC17([Suggest improvements])
+            UC18([Refine roadmap])
+            UC19([Track student progress])
+        end
+    end
+
+    seeker --- UC1
+    seeker --- UC2
+    seeker --- UC3
+    seeker --- UC4
+    seeker --- UC5
+    seeker --- UC6
+    seeker --- UC7
+    seeker --- UC8
+
+    advisor --- UC14
+    advisor --- UC15
+    advisor --- UC16
+    advisor --- UC17
+    advisor --- UC18
+    advisor --- UC19
+
+    UC3 -.-> UC9
+    UC3 -.-> UC10
+    UC3 -.-> UC11
+    UC3 -.-> UC12
+    UC3 -.-> UC13
+
+    UC16 -.-> UC6
+    UC18 -.-> UC6
+```
+
 ## Azure OpenAI integration
 
 The app calls Azure OpenAI only from the server-side API route at `POST /api/decode`. API keys are read from environment variables and are never exposed to frontend code.
