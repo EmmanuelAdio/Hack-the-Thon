@@ -30,75 +30,54 @@ This is not just a CV writer or job matcher. The core idea is opportunity access
 Each pillar receives a score, status, explanation, evidence found, blocking gap, and next action.
 
 ## Use Case Diagram
-
-The diagram below gives a compact SysML-style overview of how the main users interact with Opportunity Decoder. It groups the core student journey, advisor actions, and shared AI processes so the system boundary stays readable and uses space more efficiently in GitHub Markdown.
+The diagram below presents a simplified SysML-style use case view of Opportunity Decoder. It shows the two primary actors, the main system use cases, and the advisor's role in reviewing and verifying the AI-generated roadmap.
 
 ```mermaid
 flowchart LR
 
     seeker[Career Seeker]
-    
     advisor[Career Advisor]
 
     subgraph system[Opportunity Decoder]
-        direction LR
+        direction TB
 
-        subgraph seekerCases[Career Seeker Use Cases]
-            direction TB
-            UC1([Enter career goal<br/>Paste job description])
-            UC2([Upload CV and experiences])
-            UC3([Generate readiness analysis])
-            UC4([View 8-pillar dashboard])
-            UC5([Review evidence map])
-            UC6([Follow interactive roadmap])
-            UC7([View application readiness])
-            UC8([Export or share roadmap])
-        end
+        UC1([Provide career information<br/>Paste job description<br/>Provide career goal])
+        UC3([Upload CV and experiences])
+        UC4([Generate readiness analysis])
+        UC5([View personalised roadmap])
+        UC6([Track readiness progress])
+        
+        UC10([Review student profile])
+        UC11([Review AI-generated analysis])
+        UC12([Verify roadmap recommendations])
 
-        subgraph sharedCases[Shared AI Processes]
-            direction TB
-            UC9([Generate readiness score])
-            UC10([Identify skill and evidence gaps])
-            UC11([Identify hidden evidence])
-            UC12([Generate roadmap])
-            UC13([Generate CV and interview suggestions])
-        end
 
-        subgraph advisorCases[Career Advisor Use Cases]
-            direction TB
-            UC14([Review student profile])
-            UC15([Review AI-generated analysis])
-            UC16([Verify roadmap recommendations])
-            UC17([Suggest improvements])
-            UC18([Refine roadmap])
-            UC19([Track student progress])
-        end
+        UC16([Generate readiness score])
+        UC17([Identify skill and evidence gaps])
+        UC18([Identify hidden evidence])
+        UC19([Generate roadmap])
+        UC20([Generate CV and interview suggestions])
+
     end
 
     seeker --- UC1
-    seeker --- UC2
     seeker --- UC3
     seeker --- UC4
     seeker --- UC5
     seeker --- UC6
-    seeker --- UC7
-    seeker --- UC8
 
-    advisor --- UC14
-    advisor --- UC15
-    advisor --- UC16
-    advisor --- UC17
-    advisor --- UC18
-    advisor --- UC19
+    advisor --- UC10
+    advisor --- UC11
+    advisor --- UC12
 
-    UC3 -.-> UC9
-    UC3 -.-> UC10
-    UC3 -.-> UC11
-    UC3 -.-> UC12
-    UC3 -.-> UC13
+    UC4 -.-> UC16
+    UC4 -.-> UC17
+    UC4 -.-> UC18
+    UC4 -.-> UC19
+    UC4 -.-> UC20
 
-    UC16 -.-> UC6
-    UC18 -.-> UC6
+    UC12 -.-> UC7
+    UC14 -.-> UC7
 ```
 
 ## Azure OpenAI integration
