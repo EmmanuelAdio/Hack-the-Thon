@@ -29,6 +29,69 @@ This is not just a CV writer or job matcher. The core idea is opportunity access
 
 Each pillar receives a score, status, explanation, evidence found, blocking gap, and next action.
 
+## Use Case Diagram
+
+The diagram below shows how Career Seekers and Career Advisors interact with Opportunity Decoder. It highlights the core user actions, the shared AI-driven system processes, and the advisor's role in reviewing and verifying the generated roadmap.
+
+```mermaid
+flowchart LR
+
+    seeker[Career Seeker<br/>Student / Graduate / Career Changer]
+    advisor[Career Advisor<br/>Mentor / Careers Coach]
+
+    subgraph system[Opportunity Decoder]
+
+        UC1([Enter career goal])
+        UC2([Paste job description])
+        UC3([Upload CV and experiences])
+        UC4([Generate readiness analysis])
+        UC5([View 8-pillar dashboard])
+        UC6([Review evidence map])
+        UC7([Follow interactive roadmap])
+        UC8([View application readiness])
+        UC9([Export or share roadmap])
+
+        UC10([Review student profile])
+        UC11([Review AI-generated analysis])
+        UC12([Verify roadmap recommendations])
+        UC13([Suggest improvements])
+        UC14([Refine roadmap])
+        UC15([Track student progress])
+
+        UC16([Generate readiness score])
+        UC17([Identify skill and evidence gaps])
+        UC18([Identify hidden evidence])
+        UC19([Generate roadmap])
+        UC20([Generate CV and interview suggestions])
+
+    end
+
+    seeker --> UC1
+    seeker --> UC2
+    seeker --> UC3
+    seeker --> UC4
+    seeker --> UC5
+    seeker --> UC6
+    seeker --> UC7
+    seeker --> UC8
+    seeker --> UC9
+
+    advisor --> UC10
+    advisor --> UC11
+    advisor --> UC12
+    advisor --> UC13
+    advisor --> UC14
+    advisor --> UC15
+
+    UC4 --> UC16
+    UC4 --> UC17
+    UC4 --> UC18
+    UC4 --> UC19
+    UC4 --> UC20
+
+    UC14 --> UC7
+```
+
 ## Azure OpenAI integration
 
 The app calls Azure OpenAI only from the server-side API route at `POST /api/decode`. API keys are read from environment variables and are never exposed to frontend code.
