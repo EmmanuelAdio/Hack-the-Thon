@@ -42,21 +42,16 @@ flowchart LR
     subgraph system[Opportunity Decoder]
         direction TB
 
-        UC1([Enter career goal<br/>Paste job description])
+        UC1([Provide career information<br/>Paste job description<br/>Provide career goal])
         UC3([Upload CV and experiences])
         UC4([Generate readiness analysis])
-        UC5([View 8-pillar dashboard])
-        UC6([Review evidence map])
-        UC7([Follow interactive roadmap])
-        UC8([View application readiness])
-        UC9([Export or share roadmap])
-
+        UC5([View personalised roadmap])
+        UC6([Track readiness progress])
+        
         UC10([Review student profile])
         UC11([Review AI-generated analysis])
         UC12([Verify roadmap recommendations])
-        UC13([Suggest improvements])
-        UC14([Refine roadmap])
-        UC15([Track student progress])
+
 
         UC16([Generate readiness score])
         UC17([Identify skill and evidence gaps])
@@ -71,16 +66,10 @@ flowchart LR
     seeker --- UC4
     seeker --- UC5
     seeker --- UC6
-    seeker --- UC7
-    seeker --- UC8
-    seeker --- UC9
 
     advisor --- UC10
     advisor --- UC11
     advisor --- UC12
-    advisor --- UC13
-    advisor --- UC14
-    advisor --- UC15
 
     UC4 -.-> UC16
     UC4 -.-> UC17
