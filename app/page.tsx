@@ -16,6 +16,8 @@ import {
   Trophy
 } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import { buildMockReport } from "@/lib/mock-report";
+import { normaliseOpportunityResponse } from "@/lib/normaliseOpportunityResponse";
 import { DecodeReport, DecodeRequest, EvidenceStrength, FeedbackStyle, Impact, PillarStatus, RoadmapItem, Timeline } from "@/lib/types";
 
 const demoJobDescription =
@@ -27,14 +29,28 @@ const demoUserBackground =
 const timelineOptions: Timeline[] = ["Apply now", "7 days", "30 days", "3 months"];
 const feedbackOptions: FeedbackStyle[] = ["Encouraging", "Strict recruiter", "Mentor"];
 
-const roadmapLabels = {
-  immediateFixes: "Immediate fixes",
-  sevenDayPlan: "Short-term preparation",
-  thirtyDayPlan: "Evidence building",
-  threeMonthPlan: "Longer-term growth"
-} as const;
-
 type RoadmapKey = keyof DecodeReport["roadmap"];
+
+type RoadmapPhase = {
+  key: RoadmapKey;
+  label: string;
+  tone: string;
+  icon: string;
+  color: string;
+};
+
+const roadmapPhases: RoadmapPhase[] = [
+  { key: "immediateFixes", label: "Immediate fixes", tone: "Now", icon: "⚡", color: "#ef4444" },
+  { key: "sevenDayPlan", label: "Short-term preparation", tone: "This week", icon: "📅", color: "#4f8ef7" },
+  { key: "thirtyDayPlan", label: "Evidence building", tone: "This month", icon: "🔨", color: "#a855f7" },
+  { key: "threeMonthPlan", label: "Longer-term growth", tone: "Next quarter", icon: "🚀", color: "#22c55e" }
+];
+
+function impactBadgeTone(impact: Impact) {
+  if (impact === "High") return "bg-rose-100 text-rose-700";
+  if (impact === "Medium") return "bg-amber-100 text-amber-800";
+  return "bg-slate-100 text-slate-600";
+}
 
 export default function Home() {
   const [form, setForm] = useState<DecodeRequest>({
@@ -44,6 +60,8 @@ export default function Home() {
     feedbackStyle: "Encouraging"
   });
   const [report, setReport] = useState<DecodeReport | null>(null);
+  const [reportSource, setReportSource] = useState<"azure" | "mock" | "client-fallback" | "">("");
+  const [reportReason, setReportReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({});
@@ -81,18 +99,32 @@ export default function Home() {
         body: JSON.stringify(form)
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(data?.error ?? "Unable to decode this opportunity.");
       }
 
-      setReport(data as DecodeReport);
+      const source = (response.headers.get("x-decode-source") as "azure" | "mock" | null) ?? "azure";
+      const reason = response.headers.get("x-decode-reason") ?? "";
+      setReportSource(source);
+      setReportReason(reason);
+      setReport(normaliseOpportunityResponse(data));
       window.setTimeout(() => {
         document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" });
       }, 100);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Something went wrong.");
+      setReport(buildMockReport(form));
+      setReportSource("client-fallback");
+      setReportReason(submitError instanceof Error ? submitError.message : "fetch failed");
+      setError(
+        submitError instanceof Error
+          ? `${submitError.message} Showing demo results so you can still explore the report.`
+          : "The decoder API could not be reached. Showing demo results so you can still explore the report."
+      );
+      window.setTimeout(() => {
+        document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     } finally {
       setLoading(false);
     }
@@ -112,6 +144,10 @@ export default function Home() {
     await navigator.clipboard.writeText(text);
     setCopiedItem(id);
     window.setTimeout(() => setCopiedItem(""), 1400);
+  }
+
+  function toggleTask(taskId: string, value: boolean) {
+    setCompletedTasks((current) => ({ ...current, [taskId]: value }));
   }
 
   return (
@@ -234,6 +270,20 @@ export default function Home() {
 
         {report ? (
           <section id="dashboard" className="space-y-6">
+            {reportSource && reportSource !== "azure" ? (
+              <div className="flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                <Sparkles className="mt-0.5 h-5 w-5 flex-none text-amber-600" aria-hidden="true" />
+                <div>
+                  <p className="font-bold">
+                    Showing the built-in demo report — the live Azure call did not run.
+                  </p>
+                  <p className="mt-1 text-amber-800">
+                    The scores and recommendations below are static placeholders, so they will look
+                    the same for every CV. Reason: <span className="font-mono text-xs">{reportReason || "unknown"}</span>. Check your <span className="font-mono text-xs">npm run dev</span> terminal for a <span className="font-mono text-xs">[decode]</span> log line with details.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <section className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr]">
               <ScorePanel report={report} />
               <SummaryPanel report={report} />
@@ -301,43 +351,11 @@ export default function Home() {
                   {completedCount}/{totalRoadmapItems} completed
                 </span>
               </div>
-              <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                {(Object.entries(report.roadmap) as [RoadmapKey, RoadmapItem[]][]).map(([key, items]) => (
-                  <div key={key} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <h3 className="text-lg font-bold text-slate-950">{roadmapLabels[key]}</h3>
-                    <div className="mt-4 space-y-3">
-                      {items.map((item, index) => {
-                        const taskId = `${key}-${index}-${item.task}`;
-                        return (
-                          <label key={taskId} className="flex cursor-pointer gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition hover:ring-blue-200">
-                            <input
-                              type="checkbox"
-                              className="mt-1 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                              checked={Boolean(completedTasks[taskId])}
-                              onChange={(event) =>
-                                setCompletedTasks((current) => ({
-                                  ...current,
-                                  [taskId]: event.target.checked
-                                }))
-                              }
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className="block font-bold text-slate-950">{item.task}</span>
-                              <span className="mt-1 block text-sm leading-6 text-slate-600">{item.whyItMatters}</span>
-                              <span className="mt-3 flex flex-wrap gap-2">
-                                <Badge>{item.relatedPillar}</Badge>
-                                <Badge>{item.difficulty}</Badge>
-                                <Badge>{item.estimatedTime}</Badge>
-                                <Badge>{item.impact} impact</Badge>
-                              </span>
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <InteractiveRoadmap
+                report={report}
+                completedTasks={completedTasks}
+                onToggleTask={toggleTask}
+              />
             </section>
 
             <section className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-soft">
@@ -573,4 +591,320 @@ function evidenceClass(strength: EvidenceStrength) {
   };
 
   return classes[strength];
+}
+
+type RoadmapStepData = {
+  phase: RoadmapPhase;
+  milestone: RoadmapItem;
+  milestoneId: string;
+  branches: RoadmapItem[];
+  branchIds: string[];
+};
+
+function InteractiveRoadmap({
+  report,
+  completedTasks,
+  onToggleTask
+}: {
+  report: DecodeReport;
+  completedTasks: Record<string, boolean>;
+  onToggleTask: (taskId: string, value: boolean) => void;
+}) {
+  const steps: RoadmapStepData[] = roadmapPhases
+    .map((phase) => {
+      const items = report.roadmap[phase.key];
+      if (!items || items.length === 0) {
+        return null;
+      }
+
+      const [milestone, ...rest] = items;
+      return {
+        phase,
+        milestone,
+        milestoneId: `${phase.key}-0-${milestone.task}`,
+        branches: rest,
+        branchIds: rest.map((item, index) => `${phase.key}-${index + 1}-${item.task}`)
+      };
+    })
+    .filter((step): step is RoadmapStepData => step !== null);
+
+  if (steps.length === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600">
+        The decoder did not return any roadmap actions yet.
+      </p>
+    );
+  }
+
+  const milestonesDone = steps.filter((step) => completedTasks[step.milestoneId]).length;
+  const milestoneProgress = Math.round((milestonesDone / steps.length) * 100);
+  const finalDecision = report.applyRecommendation.decision;
+  const finalScore = report.overallReadinessScore;
+
+  return (
+    <div className="relative mx-auto w-full max-w-3xl pb-32 pt-10">
+      <div className="relative w-full">
+        <div
+          className="absolute left-1/2 top-0 z-10 h-6 w-6 rounded-full bg-slate-800"
+          style={{
+            transform: "translate(-50%, -50%)",
+            border: "4px solid #fff",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-12 whitespace-nowrap rounded-full bg-slate-900 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white"
+        >
+          Today · {finalScore}/100
+        </div>
+
+        {steps.map((step, index) => (
+          <RoadmapPhaseStep
+            key={step.phase.key}
+            step={step}
+            index={index}
+            totalSteps={steps.length}
+            completedTasks={completedTasks}
+            onToggleTask={onToggleTask}
+          />
+        ))}
+
+        <div
+          className="absolute bottom-0 left-1/2 z-10 flex h-16 w-16 items-center justify-center rounded-full text-2xl text-white"
+          style={{
+            transform: "translate(-50%, 50%)",
+            background: "#22c55e",
+            border: "5px solid #fff",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.2)"
+          }}
+          aria-hidden="true"
+        >
+          ⭐
+        </div>
+        <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 text-center">
+          <div className="text-lg font-extrabold text-emerald-600">{finalDecision}</div>
+          <div className="mt-1 text-sm font-semibold text-slate-500">
+            {milestonesDone}/{steps.length} milestones complete · {milestoneProgress}% of plan done
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoadmapPhaseStep({
+  step,
+  index,
+  totalSteps,
+  completedTasks,
+  onToggleTask
+}: {
+  step: RoadmapStepData;
+  index: number;
+  totalSteps: number;
+  completedTasks: Record<string, boolean>;
+  onToggleTask: (taskId: string, value: boolean) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const isLeft = index % 2 === 0;
+  const { phase, milestone, milestoneId, branches, branchIds } = step;
+  const milestoneDone = Boolean(completedTasks[milestoneId]);
+  const curvePath = isLeft ? "M50,0 C10,25 10,75 50,100" : "M50,0 C90,25 90,75 50,100";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        height: 260,
+        width: "100%",
+        zIndex: hovered ? 50 : totalSteps - index
+      }}
+    >
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0 }}
+        aria-hidden="true"
+      >
+        <path d={curvePath} fill="none" stroke="#1e293b" strokeWidth="28" vectorEffect="non-scaling-stroke" />
+        <path
+          d={curvePath}
+          fill="none"
+          stroke="#cbd5e1"
+          strokeWidth="3"
+          strokeDasharray="12,12"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: isLeft ? "20%" : "80%",
+          transform: "translate(-50%, -50%)",
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: "#fff",
+          border: `3px solid ${phase.color}`,
+          zIndex: 1
+        }}
+        aria-hidden="true"
+      />
+
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: isLeft ? "20%" : "80%",
+          zIndex: 10
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -100,
+            left: isLeft ? -24 : -360,
+            width: 380,
+            height: 200,
+            zIndex: 0
+          }}
+          aria-hidden="true"
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: -48,
+            width: 48,
+            height: 48,
+            background: milestoneDone ? "#22c55e" : phase.color,
+            borderRadius: "50% 50% 50% 0",
+            transform: `rotate(-45deg) ${hovered ? "scale(1.15)" : "scale(1)"}`,
+            transformOrigin: "bottom left",
+            boxShadow: hovered ? "0 8px 16px rgba(0,0,0,0.2)" : "0 4px 10px rgba(0,0,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            border: "3px solid #fff",
+            zIndex: 2
+          }}
+        >
+          <div style={{ transform: "rotate(45deg)", color: "#fff", fontSize: 20 }}>
+            {milestoneDone ? "✓" : phase.icon}
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            top: -38,
+            left: isLeft ? 36 : -36,
+            transform: isLeft ? "none" : "translateX(-100%)",
+            background: "rgba(255,255,255,0.95)",
+            padding: "6px 14px",
+            borderRadius: 20,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            fontWeight: 700,
+            fontSize: 14,
+            color: "#0f172a",
+            whiteSpace: "nowrap",
+            opacity: hovered ? 0 : 1,
+            transition: "opacity 0.2s",
+            pointerEvents: "none",
+            border: "1px solid #e2e8f0",
+            zIndex: 1
+          }}
+        >
+          {phase.label}
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            top: -80,
+            left: isLeft ? 48 : -368,
+            width: 320,
+            opacity: hovered ? 1 : 0,
+            visibility: hovered ? "visible" : "hidden",
+            transform: hovered ? "translateY(0) scale(1)" : "translateY(10px) scale(0.95)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            pointerEvents: hovered ? "auto" : "none",
+            zIndex: 10
+          }}
+        >
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className="text-[11px] font-extrabold uppercase tracking-widest"
+                style={{ color: phase.color }}
+              >
+                {phase.tone}
+              </span>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${impactBadgeTone(milestone.impact)}`}>
+                {milestone.impact} impact
+              </span>
+            </div>
+            <h4 className="mt-2 text-base font-extrabold leading-snug text-slate-950">{milestone.task}</h4>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{milestone.whyItMatters}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <Badge>{milestone.relatedPillar}</Badge>
+              <Badge>{milestone.difficulty}</Badge>
+              <Badge>{milestone.estimatedTime}</Badge>
+            </div>
+
+            <label className="mt-4 flex cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:ring-blue-300">
+              <input
+                type="checkbox"
+                checked={milestoneDone}
+                onChange={(event) => onToggleTask(milestoneId, event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>{milestoneDone ? "Milestone complete" : "Mark milestone complete"}</span>
+            </label>
+
+            {branches.length > 0 && (
+              <div className="mt-4 border-t border-slate-200 pt-3">
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">
+                  Related side quests
+                </p>
+                <div className="mt-2 flex flex-col gap-2">
+                  {branches.map((branch, branchIndex) => {
+                    const branchId = branchIds[branchIndex];
+                    const branchDone = Boolean(completedTasks[branchId]);
+                    return (
+                      <label
+                        key={branchId}
+                        className="flex cursor-pointer items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 ring-1 ring-slate-200 transition hover:ring-blue-300"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          checked={branchDone}
+                          onChange={(event) => onToggleTask(branchId, event.target.checked)}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-bold text-slate-950">{branch.task}</span>
+                          <span className="mt-0.5 block text-xs text-slate-500">
+                            {branch.difficulty} · {branch.estimatedTime} · {branch.impact} impact
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
