@@ -37,6 +37,7 @@ The diagram below gives a compact SysML-style overview of how the main users int
 flowchart LR
 
     seeker[Career Seeker]
+    
     advisor[Career Advisor]
 
     subgraph system[Opportunity Decoder]
